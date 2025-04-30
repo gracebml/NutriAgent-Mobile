@@ -1,47 +1,70 @@
-class User {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String? photoURL;
-  final Map<String, dynamic>? preferences;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-  User({
-    required this.id,
+class UserModel {
+  final String uid;
+  final String email;
+  final String displayName;
+  final String? photoURL;
+  final DateTime createdAt;
+  final Map<String, dynamic>? preferences;
+
+  UserModel({
+    required this.uid,
     required this.email,
-    this.displayName,
+    required this.displayName,
     this.photoURL,
+    required this.createdAt,
     this.preferences,
-    this.createdAt,
-    this.updatedAt,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      displayName: json['displayName'] as String?,
-      photoURL: json['photoURL'] as String?,
-      preferences: json['preferences'] as Map<String, dynamic>?,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : null,
+  // Factory constructor to create a UserModel from a Firestore document
+  factory UserModel.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    
+    // Handle potential null or missing values safely
+    return UserModel(
+      uid: doc.id,
+      email: data['email'] ?? '',
+      displayName: data['displayName'] ?? 'User',
+      photoURL: data['photoURL'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      preferences: data['preferences'] as Map<String, dynamic>?,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  // Convert UserModel to a Map that can be stored in Firestore
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      'uid': uid,
       'email': email,
-      if (displayName != null) 'displayName': displayName,
-      if (photoURL != null) 'photoURL': photoURL,
-      if (preferences != null) 'preferences': preferences,
-      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
-      if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      'displayName': displayName,
+      'photoURL': photoURL,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'preferences': preferences ?? {},
     };
+  }
+
+  // Create a copy of the user with updated fields
+  UserModel copyWith({
+    String? uid,
+    String? email,
+    String? displayName,
+    String? photoURL,
+    DateTime? createdAt,
+    Map<String, dynamic>? preferences,
+  }) {
+    return UserModel(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      photoURL: photoURL ?? this.photoURL,
+      createdAt: createdAt ?? this.createdAt,
+      preferences: preferences ?? this.preferences,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'UserModel(uid: $uid, email: $email, displayName: $displayName)';
   }
 }

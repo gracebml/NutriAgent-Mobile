@@ -41,12 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA0pno8A8SYEQICyQ8JSlA-SyUYT-q7qSk',
-    appId: '1:862480204476:web:183bddf2521e35484ac6b9',
-    messagingSenderId: '862480204476',
-    projectId: 'nutcai-agents',
-    authDomain: 'nutcai-agents.firebaseapp.com',
-    storageBucket: 'nutcai-agents.firebasestorage.app',
+    apiKey: "AIzaSyA0pno8A8SYEQICyQ8JSlA-SyUYT-q7qSk",
+    authDomain: "nutcai-agents.firebaseapp.com",
+    databaseURL: "https://nutcai-agents-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "nutcai-agents",
+    storageBucket: "nutcai-agents.firebasestorage.app",
+    messagingSenderId: "862480204476",
+    appId: "1:862480204476:web:183bddf2521e35484ac6b9"
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -83,4 +84,5 @@ class DefaultFirebaseOptions {
     authDomain: 'nutcai-agents.firebaseapp.com',
     storageBucket: 'nutcai-agents.firebasestorage.app',
   );
+
 }

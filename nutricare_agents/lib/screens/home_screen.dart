@@ -4,7 +4,6 @@ import 'package:nutricare_agents/screens/auth/login_screen.dart';
 import 'package:nutricare_agents/screens/settings_screen.dart';
 import 'package:nutricare_agents/utils/theme.dart';
 import 'package:nutricare_agents/widgets/search_bar.dart';
-import 'package:nutricare_agents/models/menu_item.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
