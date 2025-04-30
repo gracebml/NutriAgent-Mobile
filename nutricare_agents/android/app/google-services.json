@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "862480204476",
+    "project_id": "nutcai-agents",
+    "storage_bucket": "nutcai-agents.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862480204476:android:f6a31bef1fbc56344ac6b9",
+        "android_client_info": {
+          "package_name": "com.brainotfound.nutcai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0sAE6NTqZYXoQlnKee0BH2PTrB6Hg0S8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862480204476:android:9245455bd5b4abc74ac6b9",
+        "android_client_info": {
+          "package_name": "com.example.nutricare_agents"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0sAE6NTqZYXoQlnKee0BH2PTrB6Hg0S8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
