@@ -8,6 +8,9 @@ import 'package:flutter/foundation.dart'; // Thêm import này cho kIsWeb và kD
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:nutricare_agents/services/auth_service.dart';
+import 'package:provider/provider.dart' as provider;
+import 'package:nutricare_agents/providers/health_profile_provider.dart';
+import 'package:nutricare_agents/screens/profile/health_info_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,10 +75,16 @@ Future<void> main() async {
   await userBox.put('firebaseInitialized', firebaseInitialized);
 
   runApp(
-    ProviderScope(
-      child: NutriCareApp(
-        firebaseInitialized: firebaseInitialized,
-        hasInternetConnection: true, // Luôn true vì không kiểm tra nữa
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(create: (_) => HealthProfileProvider()),
+        // Add other providers here if needed
+      ],
+      child: ProviderScope(
+        child: NutriCareApp(
+          firebaseInitialized: firebaseInitialized,
+          hasInternetConnection: true, // Luôn true vì không kiểm tra nữa
+        ),
       ),
     ),
   );
@@ -102,6 +111,10 @@ class NutriCareApp extends ConsumerWidget {
       home: SplashScreen(
         firebaseInitialized: firebaseInitialized,
       ),
+      routes: {
+        '/health_info': (context) => const HealthInfoScreen(),
+        // Add other routes here if needed
+      },
     );
   }
 }

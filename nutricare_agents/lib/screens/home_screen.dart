@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nutricare_agents/models/health_profile.dart';
+import 'package:nutricare_agents/providers/health_profile_provider.dart';
 import 'package:nutricare_agents/screens/auth/login_screen.dart';
+import 'package:nutricare_agents/screens/profile/health_info_screen.dart';
 import 'package:nutricare_agents/screens/settings_screen.dart';
+import 'package:nutricare_agents/services/auth_service.dart';
 import 'package:nutricare_agents/utils/theme.dart';
 import 'package:nutricare_agents/widgets/search_bar.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +26,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+    _checkHealthProfile();
+  }
+  
+  Future<void> _checkHealthProfile() async {
+    // Delay slightly to ensure the screen is fully loaded
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      final authService = AuthService();
+      await authService.checkUserHealthProfile(context);
+    }
   }
   
   @override

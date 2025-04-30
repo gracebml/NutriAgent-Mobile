@@ -13,7 +13,7 @@ import 'package:nutricare_agents/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const NutriCareApp(firebaseInitialized: true));
+    await tester.pumpWidget(const NutriCareApp(firebaseInitialized: true, hasInternetConnection: true));
 
     // This is just a placeholder test. The actual app doesn't have a counter.
     // In a real test, we would verify app-specific functionality.

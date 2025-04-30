@@ -165,4 +165,42 @@ class AuthService {
       rethrow; // Re-throw to handle in UI
     }
   }
+  
+  // Check if user has a health profile and prompt them to create one if not
+  Future<void> checkUserHealthProfile(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final snapshot = await FirebaseFirestore.instance
+        .collection('healthProfiles')
+        .where('userId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+        
+      if (snapshot.docs.isEmpty) {
+        // Người dùng chưa có thông tin sức khỏe
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Thông tin sức khỏe'),
+              content: Text('Bạn chưa nhập thông tin sức khỏe. Nhập ngay để có trải nghiệm tốt hơn?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Để sau'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/health_info');
+                  },
+                  child: Text('Nhập ngay'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    }
+  }
 }

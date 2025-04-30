@@ -1,235 +1,244 @@
-import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Health profile information model based on HealthInformationForm.tsx
-class HealthProfile extends Equatable {
-  /// User's age
-  final int? age;
-  
-  /// User's gender (Male, Female, Other, Prefer not to say)
-  final String? gender;
-  
-  /// User's height in cm
-  final double? heightCm;
-  
-  /// User's weight in kg
-  final double? weightKg;
-  
-  /// Activity level (sedentary, light, moderate, active, extra_active)
-  final String? activityLevel;
-  
-  /// Food allergies as a list
-  final List<String>? allergies;
-  
-  /// Dietary restrictions (e.g., vegetarian, vegan, etc.)
-  final List<String>? dietaryRestrictions;
-  
-  /// Food preferences - what the user likes/dislikes
-  final String? preferences;
-  
-  /// Medical conditions that might affect diet
-  final String? medicalConditions;
-  
-  /// Nutritional or health goals
-  final String? goals;
-  
-  /// Constructor
-  const HealthProfile({
+enum Gender { male, female, other, preferNotToSay }
+
+enum ActivityLevel {
+  sedentary,
+  light,
+  moderate,
+  active,
+  extraActive,
+}
+
+// Helper function to convert String to Gender enum
+Gender stringToGender(String? value) {
+  switch (value?.toLowerCase()) {
+    case 'male':
+      return Gender.male;
+    case 'female':
+      return Gender.female;
+    case 'other':
+      return Gender.other;
+    case 'prefer not to say':
+      return Gender.preferNotToSay;
+    default:
+      return Gender.preferNotToSay;
+  }
+}
+
+// Helper to convert Gender to String
+String genderToString(Gender gender) {
+  switch (gender) {
+    case Gender.male:
+      return 'Male';
+    case Gender.female:
+      return 'Female';
+    case Gender.other:
+      return 'Other';
+    case Gender.preferNotToSay:
+      return 'Prefer not to say';
+  }
+}
+
+// Helper to convert ActivityLevel enum to String
+String activityLevelToString(ActivityLevel level) {
+  switch (level) {
+    case ActivityLevel.sedentary:
+      return 'Sedentary (little or no exercise)';
+    case ActivityLevel.light:
+      return 'Lightly active (light exercise/sports 1-3 days/week)';
+    case ActivityLevel.moderate:
+      return 'Moderately active (moderate exercise/sports 3-5 days/week)';
+    case ActivityLevel.active:
+      return 'Very active (hard exercise/sports 6-7 days a week)';
+    case ActivityLevel.extraActive:
+      return 'Extra active (very hard exercise/sports & physical job)';
+  }
+}
+
+// Helper to convert String to ActivityLevel enum
+ActivityLevel stringToActivityLevel(String? value) {
+  switch (value?.toLowerCase()) {
+    case 'sedentary':
+      return ActivityLevel.sedentary;
+    case 'light':
+      return ActivityLevel.light;
+    case 'moderate':
+      return ActivityLevel.moderate;
+    case 'active':
+      return ActivityLevel.active;
+    case 'extra_active':
+      return ActivityLevel.extraActive;
+    default:
+      return ActivityLevel.moderate; // Default value
+  }
+}
+
+class HealthProfileModel {
+  String? id;
+  String userId;
+  String name;
+  int? age;
+  Gender? gender;
+  double? height; // in cm
+  double? weight; // in kg
+  ActivityLevel? activityLevel;
+  String? allergies;
+  String? dietaryRestrictions;
+  String? preferences;
+  String? medicalConditions;
+  String? goals;
+  DateTime lastUpdated;
+
+  HealthProfileModel({
+    this.id,
+    required this.userId,
+    required this.name,
     this.age,
     this.gender,
-    this.heightCm,
-    this.weightKg,
+    this.height,
+    this.weight,
     this.activityLevel,
     this.allergies,
     this.dietaryRestrictions,
     this.preferences,
     this.medicalConditions,
     this.goals,
-  });
-  
-  /// Create an empty health profile
-  static const empty = HealthProfile();
-  
-  /// Calculate BMI if height and weight are available
-  double? get bmi {
-    if (heightCm != null && weightKg != null && heightCm! > 0) {
-      // BMI = weight(kg) / height(m)²
-      final heightM = heightCm! / 100;
-      return weightKg! / (heightM * heightM);
-    }
-    return null;
+    DateTime? lastUpdated,
+  }) : this.lastUpdated = lastUpdated ?? DateTime.now();
+
+  // Factory constructor from Firestore document
+  factory HealthProfileModel.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    
+    return HealthProfileModel(
+      id: doc.id,
+      userId: data['userId'] ?? '',
+      name: data['name'] ?? 'User',
+      age: data['age'],
+      gender: stringToGender(data['gender']),
+      height: data['height']?.toDouble(),
+      weight: data['weight']?.toDouble(),
+      activityLevel: stringToActivityLevel(data['activityLevel']),
+      allergies: data['allergies'],
+      dietaryRestrictions: data['dietaryRestrictions'],
+      preferences: data['preferences'],
+      medicalConditions: data['medicalConditions'],
+      goals: data['goals'],
+      lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
   }
-  
-  /// Get BMI category based on calculated BMI
-  String? get bmiCategory {
-    final calculatedBmi = bmi;
-    if (calculatedBmi == null) return null;
-    
-    if (calculatedBmi < 18.5) return 'Underweight';
-    if (calculatedBmi < 25) return 'Normal';
-    if (calculatedBmi < 30) return 'Overweight';
-    return 'Obese';
+
+  // Convert to Map for Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'name': name,
+      'age': age,
+      'gender': gender != null ? genderToString(gender!) : null,
+      'height': height,
+      'weight': weight,
+      'activityLevel': activityLevel != null ? activityLevel.toString().split('.').last : null,
+      'allergies': allergies,
+      'dietaryRestrictions': dietaryRestrictions,
+      'preferences': preferences,
+      'medicalConditions': medicalConditions,
+      'goals': goals,
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
+    };
   }
-  
-  /// Get daily caloric needs estimate based on profile data
-  /// Using Mifflin-St Jeor equation
-  double? get dailyCaloricNeeds {
-    if (age == null || heightCm == null || weightKg == null || gender == null) {
-      return null;
-    }
-    
-    // Base calculation
-    double bmr;
-    if (gender?.toLowerCase() == 'male') {
-      bmr = 10 * weightKg! + 6.25 * heightCm! - 5 * age! + 5;
-    } else {
-      bmr = 10 * weightKg! + 6.25 * heightCm! - 5 * age! - 161;
-    }
-    
-    // Apply activity multiplier
-    double activityMultiplier;
-    switch (activityLevel?.toLowerCase()) {
-      case 'sedentary':
-        activityMultiplier = 1.2;
-        break;
-      case 'light':
-        activityMultiplier = 1.375;
-        break;
-      case 'moderate':
-        activityMultiplier = 1.55;
-        break;
-      case 'active':
-        activityMultiplier = 1.725;
-        break;
-      case 'extra_active':
-        activityMultiplier = 1.9;
-        break;
-      default:
-        activityMultiplier = 1.2; // Default to sedentary
-    }
-    
-    return bmr * activityMultiplier;
-  }
-  
-  /// Create a copy of this HealthProfile with the given fields replaced
-  HealthProfile copyWith({
+
+  // Create a copy with updated fields
+  HealthProfileModel copyWith({
+    String? id,
+    String? userId,
+    String? name,
     int? age,
-    String? gender,
-    double? heightCm,
-    double? weightKg,
-    String? activityLevel,
-    List<String>? allergies,
-    List<String>? dietaryRestrictions,
+    Gender? gender,
+    double? height,
+    double? weight,
+    ActivityLevel? activityLevel,
+    String? allergies,
+    String? dietaryRestrictions,
     String? preferences,
     String? medicalConditions,
     String? goals,
+    DateTime? lastUpdated,
   }) {
-    return HealthProfile(
+    return HealthProfileModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
       age: age ?? this.age,
       gender: gender ?? this.gender,
-      heightCm: heightCm ?? this.heightCm,
-      weightKg: weightKg ?? this.weightKg,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
       activityLevel: activityLevel ?? this.activityLevel,
       allergies: allergies ?? this.allergies,
       dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,
       preferences: preferences ?? this.preferences,
       medicalConditions: medicalConditions ?? this.medicalConditions,
       goals: goals ?? this.goals,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
-  
-  /// Convert the HealthProfile to a Map
-  Map<String, dynamic> toMap() {
-    return {
-      'age': age,
-      'gender': gender,
-      'heightCm': heightCm,
-      'weightKg': weightKg,
-      'activityLevel': activityLevel,
-      'allergies': allergies,
-      'dietaryRestrictions': dietaryRestrictions,
-      'preferences': preferences,
-      'medicalConditions': medicalConditions,
-      'goals': goals,
-    };
-  }
-  
-  /// Create a HealthProfile from a map
-  factory HealthProfile.fromMap(Map<String, dynamic> map) {
-    return HealthProfile(
-      age: map['age'] as int?,
-      gender: map['gender'] as String?,
-      heightCm: map['heightCm'] as double?,
-      weightKg: map['weightKg'] as double?,
-      activityLevel: map['activityLevel'] as String?,
-      allergies: map['allergies'] != null 
-          ? List<String>.from(map['allergies']) 
-          : null,
-      dietaryRestrictions: map['dietaryRestrictions'] != null 
-          ? List<String>.from(map['dietaryRestrictions']) 
-          : null,
-      preferences: map['preferences'] as String?,
-      medicalConditions: map['medicalConditions'] as String?,
-      goals: map['goals'] as String?,
-    );
-  }
-  
-  /// Convert to JSON
-  Map<String, dynamic> toJson() => toMap();
-  
-  /// Create from JSON
-  factory HealthProfile.fromJson(Map<String, dynamic> json) => HealthProfile.fromMap(json);
-  
-  @override
-  List<Object?> get props => [
-    age, 
-    gender, 
-    heightCm, 
-    weightKg, 
-    activityLevel,
-    allergies,
-    dietaryRestrictions,
-    preferences,
-    medicalConditions,
-    goals,
-  ];
-  
-  @override
-  String toString() {
-    return 'HealthProfile(age: $age, gender: $gender, height: $heightCm cm, weight: $weightKg kg, activity: $activityLevel)';
-  }
-}
 
-/// Extension for activity level constants
-extension ActivityLevels on String {
-  static const String sedentary = 'sedentary';
-  static const String light = 'light';
-  static const String moderate = 'moderate';
-  static const String active = 'active';
-  static const String extraActive = 'extra_active';
-  
-  /// Returns true if this string is a valid activity level
-  bool get isValidActivityLevel {
-    final level = toLowerCase();
-    return level == sedentary || 
-           level == light || 
-           level == moderate || 
-           level == active || 
-           level == extraActive;
+  // Get BMI calculation
+  double? calculateBMI() {
+    if (height == null || weight == null || height! <= 0) return null;
+    
+    // BMI = weight(kg) / (height(m) * height(m))
+    double heightInMeters = height! / 100;
+    return weight! / (heightInMeters * heightInMeters);
   }
-}
 
-/// Extension for gender constants
-extension Genders on String {
-  static const String male = 'Male';
-  static const String female = 'Female';
-  static const String other = 'Other';
-  static const String preferNotToSay = 'Prefer not to say';
-  
-  /// Returns true if this string is a valid gender option
-  bool get isValidGender {
-    return this == male || 
-           this == female || 
-           this == other || 
-           this == preferNotToSay;
+  // Get BMI category
+  String? getBMICategory() {
+    final bmi = calculateBMI();
+    if (bmi == null) return null;
+    
+    if (bmi < 18.5) return "Thiếu cân";
+    if (bmi < 25) return "Bình thường";
+    if (bmi < 30) return "Thừa cân";
+    return "Béo phì";
+  }
+
+  // Calculate estimated daily calorie needs using the Harris-Benedict equation
+  int? calculateDailyCalories() {
+    if (weight == null || height == null || age == null || gender == null) return null;
+    
+    // Base Metabolic Rate (BMR)
+    double bmr;
+    
+    if (gender == Gender.male) {
+      bmr = 88.362 + (13.397 * weight!) + (4.799 * height!) - (5.677 * age!);
+    } else {
+      bmr = 447.593 + (9.247 * weight!) + (3.098 * height!) - (4.330 * age!);
+    }
+    
+    // Activity Multiplier
+    double activityMultiplier;
+    
+    switch (activityLevel) {
+      case ActivityLevel.sedentary:
+        activityMultiplier = 1.2;
+        break;
+      case ActivityLevel.light:
+        activityMultiplier = 1.375;
+        break;
+      case ActivityLevel.moderate:
+        activityMultiplier = 1.55;
+        break;
+      case ActivityLevel.active:
+        activityMultiplier = 1.725;
+        break;
+      case ActivityLevel.extraActive:
+        activityMultiplier = 1.9;
+        break;
+      default:
+        activityMultiplier = 1.55; // Default to moderate
+    }
+    
+    return (bmr * activityMultiplier).round();
   }
 }
